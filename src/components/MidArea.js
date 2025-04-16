@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Icon from "./Icon";
 
 const blockStyles = {
   whenFlagClicked: "flex flex-row flex-wrap bg-yellow-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
   whenSpriteClicked: "flex flex-row flex-wrap bg-yellow-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
-  move10Steps: "flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
-  turnLeft15: "flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
-  turnRight15: "flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
+  moveSteps: "flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
+  turnLeft: "flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
+  turnRight: "flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
+  goToPosition: "flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
 };
 
 export default function MidArea({ onDrop }) {
@@ -14,14 +15,19 @@ export default function MidArea({ onDrop }) {
 
   const handleDrop = (e) => {
     e.preventDefault();
-    const blockType = e.dataTransfer.getData("blockType");
-    setBlocks((prevBlocks) => [...prevBlocks, blockType]);
-    onDrop(blockType);
+    console.log(e.dataTransfer.getData("blockData"));
+    const blockData = JSON.parse(e.dataTransfer.getData("blockData"));
+    setBlocks((prevBlocks) => [...prevBlocks, blockData]);
+    onDrop(blockData);
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
   };
+
+  useEffect(() => {
+    console.log(blocks)
+  }, [blocks])
 
   return (
     <div
@@ -30,28 +36,36 @@ export default function MidArea({ onDrop }) {
       onDragOver={handleDragOver}
     >
       {blocks.map((block, index) => (
-        <div key={index} className={blockStyles[block]}>
-          {block === "whenFlagClicked" && (
+        <div key={index} className={blockStyles[block.type]}>
+          {block.type === "whenFlagClicked" && (
             <>
               {"When "}
               <Icon name="flag" size={15} className="text-green-600 mx-2" />
               {"clicked"}
             </>
           )}
-          {block === "whenSpriteClicked" && "When this sprite clicked"}
-          {block === "move10Steps" && "Move 10 steps"}
-          {block === "turnLeft15" && (
+          {block.type === "whenSpriteClicked" && "When this sprite clicked"}
+          {block.type === "moveSteps" && `Move ${block.value} steps`}
+          {block.type === "turnLeft" && (
             <>
               {"Turn "}
               <span className="text-white mx-2">↺</span>
-              {"15 degrees"}
+              {`${block.value} degrees`}
             </>
           )}
-          {block === "turnRight15" && (
+          {block.type === "turnRight" && (
             <>
               {"Turn "}
               <span className="text-white mx-2">↻</span>
-              {"15 degrees"}
+              {`${block.value} degrees`}
+            </>
+          )}
+          {block.type === "goToPosition" && (
+            <>
+              {"Go to x:"}
+              `{block.value.x}`
+              {"y:"}
+              `{block.value.y}`
             </>
           )}
         </div>

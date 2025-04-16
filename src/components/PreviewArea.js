@@ -14,20 +14,24 @@ export default function PreviewArea({ droppedBlocks, triggeredEvent }) {
 
   useEffect(() => {
     if (!triggeredEvent) return;
-
+    console.log("Triggered Event:", triggeredEvent);
+    console.log(droppedBlocks)
     droppedBlocks.forEach((block) => {
-      
-      if (block === "whenFlagClicked" && triggeredEvent === "whenFlagClicked") {
+
+      if (block.type === "whenFlagClicked" && triggeredEvent === "whenFlagClicked") {
         setPosition(positionRef.current);
         setRotation(rotationRef.current);
-      } else if (block === "whenSpriteClicked" && triggeredEvent === "whenSpriteClicked") {
+      } else if (block.type === "whenSpriteClicked" && triggeredEvent === "whenSpriteClicked") {
         setPosition((prev) => ({ ...prev, x: prev.x + 20 }));
-      } else if (block === "move10Steps" && triggeredEvent === "whenFlagClicked") {
-        setPosition((prev) => ({ ...prev, x: prev.x + 10 }));
-      } else if (block === "turnLeft15" && triggeredEvent === "whenFlagClicked") {
-        setRotation((prev) => prev - 15);
-      } else if (block === "turnRight15" && triggeredEvent === "whenFlagClicked") {
-        setRotation((prev) => prev + 15);
+      } else if (block.type === "moveSteps" && triggeredEvent === "whenFlagClicked") {
+        setPosition((prev) => ({ ...prev, x: prev.x + Number(block.value) }));
+      } else if (block.type === "turnLeft" && triggeredEvent === "whenFlagClicked") {
+        setRotation((prev) => prev - Number(block.value));
+      } else if (block.type === "turnRight" && triggeredEvent === "whenFlagClicked") {
+        setRotation((prev) => prev + Number(block.value));
+      }
+      else if (block.type === "goToPosition" && triggeredEvent === "whenFlagClicked") {
+        setPosition({ x: Number(block.value.x), y: Number(block.value.y) });
       }
     });
   }, [droppedBlocks, triggeredEvent]);

@@ -8,8 +8,8 @@ export default function App() {
   const [droppedBlocks, setDroppedBlocks] = useState([]);
   const [triggeredEvent, setTriggeredEvent] = useState(null);
 
-  const handleDragStart = (e, blockType) => {
-    e.dataTransfer.setData("blockType", blockType);
+  const handleDragStart = (e, block) => {
+    e.dataTransfer.setData("blockData", JSON.stringify(block));
   };
 
   const handleDrop = (blockType) => {
