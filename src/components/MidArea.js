@@ -8,6 +8,10 @@ const blockStyles = {
   turnLeft: "flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
   turnRight: "flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
   goToPosition: "flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
+  repeat: "flex flex-row flex-wrap bg-purple-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
+  say: "flex flex-row flex-wrap bg-pink-500 text-white px-2 py-1 my-2 text-sm cursor-pointer",
+  think: "flex flex-row flex-wrap bg-pink-300 text-white px-2 py-1 my-2 text-sm cursor-pointer",
+
 };
 
 export default function MidArea({ onDrop }) {
@@ -20,6 +24,7 @@ export default function MidArea({ onDrop }) {
     setBlocks((prevBlocks) => [...prevBlocks, blockData]);
     onDrop(blockData);
   };
+  console.log(blocks)
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -68,6 +73,9 @@ export default function MidArea({ onDrop }) {
               `{block.value.y}`
             </>
           )}
+          {block.type === "repeat" && `Repeat ${block.value} times`}
+          {block.type === "say" && `Say "${block.value.text}" for ${block.value.duration} sec`}
+          {block.type === "think" && `Think "${block.value.text}" for ${block.value.duration} sec`}
         </div>
       ))}
     </div>
