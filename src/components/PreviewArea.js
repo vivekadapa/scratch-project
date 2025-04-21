@@ -116,7 +116,7 @@ export default function PreviewArea({ sprites, triggeredEvent, onSpriteBlocksUpd
       ctx.restore();
 
       if (bubble) {
-        ctx.fillStyle = bubble.type === "say" ? "#ec4899" : "#f9a8d4";
+        ctx.fillStyle = "#8b5cf6";
         ctx.beginPath();
         ctx.roundRect(position.x + 60, position.y - 40, 150, 40, 10);
         ctx.fill();
