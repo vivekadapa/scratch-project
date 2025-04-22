@@ -1,4 +1,5 @@
 import React from "react";
+import Icon from "./Icon";
 
 function getBlockColor(type) {
   switch (type) {
@@ -18,6 +19,19 @@ function getBlockColor(type) {
 function getBlockContent(block) {
   switch (block.type) {
     case "event":
+      if (block.value === "whenFlagClicked") {
+        return (
+          <div className="flex items-center">
+            When <Icon name="flag" size={15} className="text-green-600 mx-2" /> clicked
+          </div>
+        );
+      } else if (block.value === "whenSpriteClicked") {
+        return (
+          <div className="flex items-center">
+            When <div className="w-4 h-4 mx-2"><img src="/sprites/cat.svg" /></div> clicked
+          </div>
+        );
+      }
       return `When ${block.value}`;
     case "motion":
       switch (block.subtype) {
