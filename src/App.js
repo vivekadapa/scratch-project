@@ -18,6 +18,7 @@ export default function App() {
   }, [sprites]);
 
   const [triggeredEvent, setTriggeredEvent] = useState(null);
+  const [runSpriteTrigger, setRunSpriteTrigger] = useState(0);
 
   const handleDragStart = (e, block) => {
     e.dataTransfer.setData("blockData", JSON.stringify({
@@ -62,20 +63,33 @@ export default function App() {
       position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 50 }
     };
     setSprites(prev => [...prev, newSprite]);
+    setSelectedSprite(newSprite);
   };
 
   const selectSprite = (sprite) => {
     setSelectedSprite(sprite);
   };
 
+
+  const handlePlay = () => {
+    setRunSpriteTrigger(t => t + 1);
+  };
+
   return (
     <div className="relative bg-blue-100 pt-1 font-sans">
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <button
           onClick={() => handleEventTrigger("whenFlagClicked")}
           className="text-white px-2 py-1 rounded flex items-center"
         >
           <Icon name="flag" size={15} className="text-green-600 mx-2" />
+        </button>
+        <button
+          onClick={handlePlay}
+          className="bg-[#fff8dc] bg-blue-500 text-white px-3 py-1 rounded text-sm flex items-center"
+        >
+          <Icon name="play" size={15} className="text-white mx-2" />
+          Play
         </button>
       </div>
       <div className="h-screen overflow-hidden flex flex-row">
@@ -91,6 +105,8 @@ export default function App() {
             sprites={sprites} 
             triggeredEvent={triggeredEvent}
             onSpriteBlocksUpdate={updateSpriteBlocks}
+            runSpriteId={selectedSprite.id}
+            runSpriteTrigger={runSpriteTrigger}
           />
           <div className="p-4 border-t border-gray-200">
             <div className="flex justify-between items-center mb-4">

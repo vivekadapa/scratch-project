@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 
-export default function PreviewArea({ sprites, triggeredEvent, onSpriteBlocksUpdate }) {
+export default function PreviewArea({ sprites, triggeredEvent, onSpriteBlocksUpdate, runSpriteId, runSpriteTrigger }) {
   const canvasRef = useRef(null);
   const spritesRef = useRef(new Map());
   const [collidedPairs, setCollidedPairs] = useState(new Set());
@@ -220,7 +220,6 @@ export default function PreviewArea({ sprites, triggeredEvent, onSpriteBlocksUpd
 
   useEffect(() => {
     if (!triggeredEvent) return;
-    
     sprites.forEach(sprite => {
       const spriteState = spritesRef.current.get(sprite.id);
       if (spriteState) {
@@ -230,12 +229,28 @@ export default function PreviewArea({ sprites, triggeredEvent, onSpriteBlocksUpd
     drawCanvas();
 
     const executeAll = async () => {
-      for (const sprite of sprites) {
-        await executeBlocks(sprite, triggeredEvent);
-      }
+      await Promise.all(
+        sprites.map(sprite => executeBlocks(sprite, triggeredEvent))
+      );
     };
     executeAll();
-  }, [sprites, triggeredEvent]);
+  }, [triggeredEvent]);
+
+
+  useEffect(() => {
+    if (!runSpriteTrigger) return;
+    if (!runSpriteId) return;
+
+    const sprite = sprites.find(s => s.id === runSpriteId);
+    if (!sprite) return;
+    const spriteState = spritesRef.current.get(runSpriteId);
+    if (spriteState) spriteState.bubble = null;
+    drawCanvas();
+    const executeAllBlocks = async () => {
+      await executeBlocks(sprite, "whenFlagClicked");
+    };
+    executeAllBlocks();
+  }, [runSpriteTrigger]);
 
   const executeBlocks = async (sprite, eventType) => {
     const spriteState = spritesRef.current.get(sprite.id);
