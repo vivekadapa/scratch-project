@@ -55,6 +55,9 @@ export default function PreviewArea({ sprites, triggeredEvent, onSpriteBlocksUpd
     cancelExecution(id1);
     cancelExecution(id2);
 
+    const originalBlocks1 = [...(spriteState1.blocks || [])];
+    const originalBlocks2 = [...(spriteState2.blocks || [])];
+
     const reverseStateBlocks = (blocks) =>
       blocks.map(block => {
         if (block.type === "motion") {
@@ -77,9 +80,16 @@ export default function PreviewArea({ sprites, triggeredEvent, onSpriteBlocksUpd
     spriteState1.previewBlocks = reverseStateBlocks(spriteState1.blocks || []);
     spriteState2.previewBlocks = reverseStateBlocks(spriteState2.blocks || []);
 
-    // Execute reverse actions sequentially
-    await runBlocksImmediate(id1, "whenFlagClicked");
-    await runBlocksImmediate(id2, "whenFlagClicked");
+
+    const reverseAction1 = runBlocksImmediate(id1, "whenFlagClicked").catch(() => {});
+    const reverseAction2 = runBlocksImmediate(id2, "whenFlagClicked").catch(() => {});
+
+    await Promise.all([reverseAction1, reverseAction2]);
+
+    spriteState1.previewBlocks = originalBlocks1;
+    spriteState2.previewBlocks = originalBlocks2;
+
+    drawCanvas();
   };
 
   const drawCanvas = () => {
@@ -138,24 +148,31 @@ export default function PreviewArea({ sprites, triggeredEvent, onSpriteBlocksUpd
   const checkCollisions = () => {
     if (!runningAllSprites.current) return;
     const newCollidedPairs = new Set();
+
     Array.from(spritesRef.current.entries()).forEach(([id1, sprite1]) => {
-      Array.from(spritesRef.current.entries()).forEach(([id2, sprite2]) => {
-        if (id1 >= id2) return;
-        const dx = sprite1.position.x - sprite2.position.x;
-        const dy = sprite1.position.y - sprite2.position.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const collisionThreshold = (sprite1.img.width + sprite2.img.width) / 4;
-        if (distance < collisionThreshold) {
-          const pairKey = `${id1},${id2}`;
-          newCollidedPairs.add(pairKey);
-          if (!collidedPairs.has(pairKey)) {
-            swapAnimations(id1, id2);
-          }
-        }
-      });
+        Array.from(spritesRef.current.entries()).forEach(([id2, sprite2]) => {
+            if (id1 >= id2) return;
+
+            const dx = sprite1.position.x - sprite2.position.x;
+            const dy = sprite1.position.y - sprite2.position.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const collisionThreshold = (sprite1.img.width + sprite2.img.width) / 4;
+
+            if (distance < collisionThreshold) {
+                const pairKey = `${id1},${id2}`;
+                newCollidedPairs.add(pairKey);
+
+                if (!collidedPairs.has(pairKey)) {
+                    setTimeout(() => {
+                        swapAnimations(id1, id2);
+                    }, 0);
+                }
+            }
+        });
     });
+
     setCollidedPairs(newCollidedPairs);
-  };
+};
 
   useEffect(() => {
     if (!triggeredEvent) return;
