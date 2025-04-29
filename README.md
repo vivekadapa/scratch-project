@@ -50,8 +50,16 @@ npm start
 
 3. **Running Programs**:
    - Click the green flag to run all sprite programs
+   - Click the play button to play sprite specific motions.
    - Click on sprites to trigger their sprite-click events
    - Drag sprites in the preview area to reposition them
+  
+4. **Hero Feature**:
+   - Follow the below example events to recreate the hero feature.
+   - Add a sprite and align it horizontally with the existing sprite and bring it close so we can simulate the collision.
+   - Add a flag clicked event to one of the sprite and when clicked , add a motion of 10 steps to right inside a repeat block.
+   - Similary do the above step but add a motion of -10 steps inside a repeat block
+   - Now click on the flag button to run all the motions and see collision in action.
 
 ## Block Types
 
