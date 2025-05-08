@@ -30,6 +30,7 @@ export default function PreviewArea({ sprites, triggeredEvent, onSpriteBlocksUpd
       if (block.type === "control" && block.subtype === "repeat") {
         const count = Math.max(1, Number(block.value) || 0);
         for (let i = 0; i < count; i++) {
+          if (execToken.cancelled) return;
           if (Array.isArray(block.blocks)) {
             for (const nestedBlock of block.blocks) {
               if (execToken.cancelled) return;
@@ -47,50 +48,6 @@ export default function PreviewArea({ sprites, triggeredEvent, onSpriteBlocksUpd
     }
   };
 
-  const swapAnimations = async (id1, id2) => {
-    const spriteState1 = spritesRef.current.get(id1);
-    const spriteState2 = spritesRef.current.get(id2);
-    if (!spriteState1 || !spriteState2) return;
-
-    cancelExecution(id1);
-    cancelExecution(id2);
-
-    const originalBlocks1 = [...(spriteState1.blocks || [])];
-    const originalBlocks2 = [...(spriteState2.blocks || [])];
-
-    const reverseStateBlocks = (blocks) =>
-      blocks.map(block => {
-        if (block.type === "motion") {
-          if (block.subtype === "moveSteps") {
-            return { ...block, value: -Number(block.value) };
-          }
-          if (block.subtype === "turnLeft") {
-            return { ...block, subtype: "turnRight", value: Number(block.value) };
-          }
-          if (block.subtype === "turnRight") {
-            return { ...block, subtype: "turnLeft", value: Number(block.value) };
-          }
-        }
-        if (block.type === "control" && block.subtype === "repeat" && block.blocks) {
-          return { ...block, blocks: reverseStateBlocks(block.blocks) };
-        }
-        return block;
-      });
-
-    spriteState1.previewBlocks = reverseStateBlocks(spriteState1.blocks || []);
-    spriteState2.previewBlocks = reverseStateBlocks(spriteState2.blocks || []);
-
-
-    const reverseAction1 = runBlocksImmediate(id1, "whenFlagClicked").catch(() => {});
-    const reverseAction2 = runBlocksImmediate(id2, "whenFlagClicked").catch(() => {});
-
-    await Promise.all([reverseAction1, reverseAction2]);
-
-    spriteState1.previewBlocks = originalBlocks1;
-    spriteState2.previewBlocks = originalBlocks2;
-
-    drawCanvas();
-  };
 
   const drawCanvas = () => {
     if (!canvasRef.current) return;
@@ -150,29 +107,55 @@ export default function PreviewArea({ sprites, triggeredEvent, onSpriteBlocksUpd
     const newCollidedPairs = new Set();
 
     Array.from(spritesRef.current.entries()).forEach(([id1, sprite1]) => {
-        Array.from(spritesRef.current.entries()).forEach(([id2, sprite2]) => {
-            if (id1 >= id2) return;
+      Array.from(spritesRef.current.entries()).forEach(([id2, sprite2]) => {
+        if (id1 >= id2) return;
 
-            const dx = sprite1.position.x - sprite2.position.x;
-            const dy = sprite1.position.y - sprite2.position.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const collisionThreshold = (sprite1.img.width + sprite2.img.width) / 4;
+        const dx = sprite1.position.x - sprite2.position.x;
+        const dy = sprite1.position.y - sprite2.position.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const collisionThreshold = (sprite1.img.width + sprite2.img.width) / 4;
 
-            if (distance < collisionThreshold) {
-                const pairKey = `${id1},${id2}`;
-                newCollidedPairs.add(pairKey);
+        if (distance < collisionThreshold) {
+          const pairKey = `${id1},${id2}`;
+          newCollidedPairs.add(pairKey);
 
-                if (!collidedPairs.has(pairKey)) {
-                    setTimeout(() => {
-                        swapAnimations(id1, id2);
-                    }, 0);
-                }
-            }
-        });
+          if (!collidedPairs.has(pairKey)) {
+            collidedPairs.add(pairKey); // Prevent repeated collisions
+            setTimeout(async () => {
+              try {
+
+                cancelExecution(id1);
+                cancelExecution(id2);
+
+                await new Promise(res => setTimeout(res, 50));
+                runningExecutions.current[id1] = { cancelled: false };
+                runningExecutions.current[id2] = { cancelled: false };
+
+                const sprite1Blocks = sprite1.blocks;
+                const sprite2Blocks = sprite2.blocks;
+                sprite1.previewBlocks = sprite2Blocks;
+                sprite2.previewBlocks = sprite1Blocks;
+
+                await Promise.all([
+                  runBlocksImmediate(id1, "whenFlagClicked"),
+                  runBlocksImmediate(id2, "whenFlagClicked"),
+                ]);
+
+                sprite1.previewBlocks = null;
+                sprite2.previewBlocks = null;
+
+                drawCanvas();
+              } finally {
+                setTimeout(() => collidedPairs.delete(pairKey), 500);
+              }
+            }, 0);
+          }
+        }
+      });
     });
 
     setCollidedPairs(newCollidedPairs);
-};
+  };
 
   useEffect(() => {
     if (!triggeredEvent) return;
